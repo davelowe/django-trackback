@@ -1,0 +1,11 @@
+<!--
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
+<rdf:Description
+    rdf:about="{{ SITE_URL }}{{ object.get_absolute_url }}"
+    dc:identifier="{{ SITE_URL }}{{ object.get_absolute_url }}"
+    dc:title="{{ object.title }}"
+    trackback:ping="{{ SITE_URL }}{% url receive_trackback object.ct,object.pk %}" />
+</rdf:RDF>
+-->

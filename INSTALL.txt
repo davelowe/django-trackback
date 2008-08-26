@@ -1,0 +1,109 @@
+Install django-trackback
+========================
+
+To install django-trackback check out the latest revision from the repository
+of download and extract the latest release.
+
+Then cd into the django-trackback folder and run ``pythons setup.py install``
+or make sure that the ``trackback`` folder is available on your pythonpath.
+
+You can check that django-trackback is installed correctly by opening a python
+shell and running::
+
+  >>> import trackback
+  >>>
+
+If no erros occur everythin is fine.
+
+
+
+Integrating into your django-project
+====================================
+
+There are a few steps to integrate django-trackback into your django project.
+
+First add trackback to the INSTALLED_APPS setting::
+
+  INSTALLED_APPS = (
+      ...
+      'trackback',
+  )
+
+Then run ``python manage.py syncdb`` to create the neccessary tables.
+Django-trackback will generate one new table named ``trackback_trackback``,
+which will store received trackbacks and pingbacks, similar to how
+django.contrib.comments works.
+
+
+
+Receiving trackbacks/pingbacks
+------------------------------
+
+Now add an entry to your Root-URLconf, for example like this::
+
+  url(r'^ping/', include('trackback.urls'))
+  
+This will setup urls for receiving trackbacks and pingbacks in your project.
+To make this urls discoverable for remote clients you have to adjust your 
+templates.
+
+In every template, where the pingback url should be discoverable add the
+following in the html-head::
+
+  <link rel="pingback" href="{% url receive_pingback %}" />
+  
+In every template, where trackback urls should be discoverable add the
+following template-tag for every object, which sould get an trackback url::
+
+  {% trackback_tags %}
+  ...
+  {% get_trackback_rdf_for object %}
+  
+Where ``object`` is the template-variable containing the object which should
+receive the trackback, e.g. a blog-entry object.
+
+
+
+Sending trackbacks/pingbacks
+----------------------------
+
+To send trackbacks and or pingbacks when publishing new content, the best
+choice is to use djangos signal framework. Django-trackback comes with
+predefined signals-handlers but you have to connect them yourself, otherwise
+this app wouldn't be reuseable enough.
+
+If you have a model called BlogEntry, which holds your blog-entries, just use
+the post_save signal and connect the desired handlers::
+
+  from django.db.models import signals
+  from yourproject.yourapp.models import BlogEntry
+  from trackback.utils.handlers import send_trackback, send_pingback
+  
+  signals.post_save.connect(send_trackback, sender=BlogEntry)  
+  signals.post_save.connect(send_pingback, sender=BlogEntry)
+  
+
+If you have some special requirements for sending trackbacks and or pingbacks
+you can use your own signal handler functions, this would be the cleanest
+method to customize the behaviour, without making changes directly to the
+django-trackback code.
+
+
+
+Gotchas
+-------
+
+Models which send and/or receive Trackbacks/Pingbacks *must* provide a
+get_absolute_url() method.
+
+Pingbacks can currently only be received for models which are displayed via
+a generic view or some similar view function which gets an ``model`` or
+``queryset`` and a ``object_id`` kwarg parameter. Otherwise django-trackback
+is not able to figure out which object should be pinged. A system for supplying
+callbacks will be implemented soon.
+
+
+
+
+  
+  
