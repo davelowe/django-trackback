@@ -44,13 +44,13 @@ def send_trackback(target, data, fail_silently=True, discover_service_url=discov
     """
     try:
         url = discover_service_url(target)
-        print url
+        #print url
         if url is not None:
             resp = urllib2.urlopen(url, urllib.urlencode(data))
-            print resp.read()
+            #print resp.read()
         return
     except Exception, e:
-        print e
+        #print e
         if fail_silently:
             return
         else:
@@ -59,5 +59,20 @@ def send_trackback(target, data, fail_silently=True, discover_service_url=discov
 
 
 
-
+def send_weblog_update(target, site_name, site_url, fail_silently=True):
+    """
+    Ping a Weblog directory like Technorati etc. and tell them, 
+    that your site was updated. Also works with ping-o-matic - a proxy
+    that informs a bunch of other directories to speed up your site.
     
+    """
+    try:
+        proxy = xmlrpclib.ServerProxy(target)
+        resp = proxy.weblogUpdates.ping(site_name, site_url)
+        #print resp
+        return
+    except Exception, e:
+        if fail_silently:
+            return
+        else:
+            raise e
