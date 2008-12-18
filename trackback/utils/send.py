@@ -18,7 +18,8 @@ def send_pingback(source, target, fail_silently=True, discover_service_callback=
     
     """
     try:
-        url = discover_url_callback(target)
+        url = discover_service_callback(target)
+        #print url #FIXME: handle relative urls. maybe in the callback function
         if url is not None:
             proxy = xmlrpclib.ServerProxy(url)
             proxy.pingback.ping(source, target)
@@ -31,7 +32,7 @@ def send_pingback(source, target, fail_silently=True, discover_service_callback=
             
             
 
-def send_trackback(target, data, fail_silently=True, discover_service_url=discover_trackback_url):
+def send_trackback(target, data, fail_silently=True, discover_service_callback=discover_trackback_url):
     """
     Send a Trackback to ``target``. Service URL is discovered using the
     supplied ``discover_service_url`` callback. If ``fail_silently`` is True,
@@ -43,9 +44,10 @@ def send_trackback(target, data, fail_silently=True, discover_service_url=discov
     
     """
     try:
-        url = discover_service_url(target)
+        url = discover_service_callback(target)
         #print url
         if url is not None:
+            #print urllib.urlencode(data)
             resp = urllib2.urlopen(url, urllib.urlencode(data))
             #print resp.read()
         return

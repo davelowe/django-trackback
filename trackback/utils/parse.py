@@ -52,7 +52,6 @@ def discover_trackback_url(url):
     try:
         remote = urllib2.urlopen(url)
     except urllib2.URLError, e:
-        print e
         return None
         
     link = None

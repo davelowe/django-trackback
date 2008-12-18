@@ -61,14 +61,17 @@ class PingbackXMLRPCDispatcher(SimpleXMLRPCDispatcher):
         function (TODO).
     
         """
+       
         if request is None:
             raise Fault(faultCode=PINGBACK_UPSTREAM_ERROR, faultString='PINGBACK_UPSTREAM_ERROR')
         
         urlresolver = get_resolver(None)
         obj = None
         
-        try:    
-            func, args, kwargs = urlresolver.resolve(target.replace('http://127.0.0.1:8000', '')) #FIXME: hardcoded url
+        try:
+            site = Site.objects.get_current()
+            func, args, kwargs = urlresolver.resolve(target.replace("http://%s"%site.domain, ''))
+
             if func.__name__ == 'object_detail':
                 # may be django's generic view or something which at least works in an similar fashion
                 if 'object_id' in kwargs:
@@ -82,7 +85,7 @@ class PingbackXMLRPCDispatcher(SimpleXMLRPCDispatcher):
                             obj = kwargs['model'].objects.get(pk=kwargs['object_id'])
                         except Exception, e:
                             raise Fault(faultCode=PINGBACK_TARGET_DOES_NOT_EXIST, faultString='PINGBACK_TARGET_DOES_NOT_EXIST')
-
+                 
             #if not content_object is found raise an exception
             if obj is None:
                 raise Fault(faultCode=PINGBACK_TARGET_CANNOT_BE_USED, faultString='PINGBACK_TARGET_CANNOT_BE_USED')
