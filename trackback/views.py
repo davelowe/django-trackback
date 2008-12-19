@@ -19,16 +19,14 @@ def receive_trackback(request, content_type_id, object_id, form_class, template_
     ctype = get_object_or_404(ContentType, pk=content_type_id)
     obj = get_object_or_404(ctype.model_class(), pk=object_id)
     site = Site.objects.get_current()
+    
     form = form_class(request.POST)
     if form.is_valid():
         trackback = form.save(commit=False)
         trackback.content_object = obj
         trackback.remote_ip = request.META['REMOTE_ADDR']
         trackback.site = site
-        try:
-            trackback.save()
-        except Exception, e:
-            print e   
+        trackback.save()
         return render_to_response(template_name, {'error': False}, mimetype="text/xml")
     else:
         context = {'error': True,

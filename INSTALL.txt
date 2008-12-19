@@ -55,7 +55,7 @@ following in the html-head::
 In every template, where trackback urls should be discoverable add the
 following template-tag for every object, which sould get an trackback url::
 
-  {% trackback_tags %}
+  {% load trackback_tags %}
   ...
   {% get_trackback_rdf_for object %}
   
