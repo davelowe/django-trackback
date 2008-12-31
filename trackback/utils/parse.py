@@ -85,12 +85,21 @@ def discover_pingback_url(url):
     try:
         remote = urllib2.urlopen(url)
     except urllib2.URLError:
-        return
+        return None
+    
     try:
+        # first look for a X-Pingback header
+        pingurl = remote.info().getheader('X-Pingback')
+        return pingurl
+    except:
+        pass
+        
+    try:
+        # then try to find a <link> element
         pingurl = PINGBACK_RE.findall(remote.read())
-    except Exception, e:
-        raise e
-    if pingurl:
         return pingurl[0]
+    except:
+        pass
+        
     return None
     

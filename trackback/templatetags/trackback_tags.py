@@ -8,6 +8,7 @@ from django import template
 from django.template.loader import render_to_string
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
 from trackback.models import Trackback
 
 register = template.Library()
@@ -72,5 +73,27 @@ def get_trackbacks_for(parser, token):
     
 get_trackbacks_for = register.tag(get_trackbacks_for)
 
+
+
+
+
+class PingbackUrlNode(template.Node):
+    """
+    Returns the absolute pingback url including current hostname and protocol.
+    FIXME: http currently hardcoded. Add support for https
+    
+    """
+    def __init__(self):
+        self.site = Site.objects.get_current()
+        
+    def render(self, context):
+        return u"http://%s%s" % (self.site.domain, reverse('receive_pingback'))
+        
+        
+def get_pingback_url(parser, token):
+    return PingbackUrlNode()
+
+
+get_pingback_url = register.tag(get_pingback_url)
 
 

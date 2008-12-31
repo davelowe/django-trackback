@@ -71,8 +71,13 @@ class PingbackXMLRPCDispatcher(SimpleXMLRPCDispatcher):
         try:
             site = Site.objects.get_current()
             func, args, kwargs = urlresolver.resolve(target.replace("http://%s"%site.domain, ''))
-
-            if func.__name__ == 'object_detail':
+            
+            print dir(func)
+            
+            if hasattr(func, 'pingback_object'):
+                obj = func.pingback_object
+                
+            elif func.__name__ == 'object_detail':
                 # may be django's generic view or something which at least works in an similar fashion
                 if 'object_id' in kwargs:
                     if 'queryset' in kwargs:

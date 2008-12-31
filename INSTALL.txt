@@ -2,9 +2,9 @@ Install django-trackback
 ========================
 
 To install django-trackback check out the latest revision from the repository
-of download and extract the latest release.
+or download and extract the latest release.
 
-Then cd into the django-trackback folder and run ``pythons setup.py install``
+Then ``cd`` into the django-trackback folder and run ``pythons setup.py install``
 or make sure that the ``trackback`` folder is available on your pythonpath.
 
 You can check that django-trackback is installed correctly by opening a python
@@ -50,8 +50,23 @@ templates.
 In every template, where the pingback url should be discoverable add the
 following in the html-head::
 
-  <link rel="pingback" href="{% url receive_pingback %}" />
+  {% load trackback_tags %}
+  ...
+  <link rel="pingback" href="{% get_pingback_url %}" />
   
+The pingback specs also allow publishing the pingback url via an HTTP X-Header.
+To enable this feature add the PingbackUrlInjectionMiddleware to the 
+``MIDDLEWARE_CLASSES`` setting::
+
+    MIDDLEWARE_CLASSES = (
+        ...
+        'trackback.middleware.PingbackUrlInjectionMiddleware',
+    )
+
+You can use the <link> Element and the Middleware together but the specs only
+require you to use one of them. Using both has the advantage of possibly
+reaching more clients.
+
 In every template, where trackback urls should be discoverable add the
 following template-tag for every object, which sould get an trackback url::
 
@@ -67,13 +82,48 @@ receive the trackback, e.g. a blog-entry object.
 Sending trackbacks/pingbacks
 ----------------------------
 
-To send trackbacks and or pingbacks when publishing new content, the best
-choice is to use djangos signal framework. Django-trackback comes with
-predefined signals-handlers but you have to connect them yourself, otherwise
-this app wouldn't be reuseable enough.
+To send trackbacks and or pingbacks when publishing new content, multiple
+options exist. One choice is to use djangos signal framework. Django-trackback 
+comes with predefined signals and signals-handlers but you have to connect 
+them yourself, otherwise this app wouldn't be reuseable enough.
 
-If you have a model called BlogEntry, which holds your blog-entries, just use
-the post_save signal and connect the desired handlers::
+If you have a model called BlogEntry, which holds your blog-entries, you can
+use the following code::
+
+    from trackback import signals
+    from trackback.utils import handlers
+    from yourproject.yourapp.models import BlogEntry
+
+    signals.send_pingback.connect(handlers.send_pingback, sender=BlogEntry)
+    signals.send_trackback.connect(handlers.send_trackback, sender=BlogEntry)
+    
+To trigger sending of the signal change the save-method of the BlogEntry model
+to send the signal::
+
+    class BlogEntry(models.Model):
+        ...
+        def save(self, *args, **kwargs):
+            super(BlogEntry, self).save(*args, **kwargs)
+            if self.published: # or some other condition
+                signals.send_pingback.send(sender=self.__class__, instance=self)
+                signals.send_trackback.send(sender=self.__class__, instance=self)
+
+If you don't want to use the signal framework it is also possible to call the 
+utility function directly. For example::
+    from trackback.utils import send
+    
+    class BlogEntry(models.Model):
+        ...
+        def save(self, *args, **kwargs):
+            super(BlogEntry, self).save(*args, **kwargs)
+            if self.published: # or some other condition
+                for url in self.content_urls: # implement this
+                    send.send_pingback(self.get_absolute_url(), url)
+                    send.send_trackback(url, trackback_data) # define trackback_data
+                    
+If you don't care about pinging receivers multiple times (not a good idea), or
+if you only save an object once and want to send ping- and trackbacks on save                    
+just use Django's post_save signal and connect the desired handlers::
 
   from django.db.models import signals
   from yourproject.yourapp.models import BlogEntry
@@ -87,6 +137,11 @@ If you have some special requirements for sending trackbacks and or pingbacks
 you can use your own signal handler functions, this would be the cleanest
 method to customize the behaviour, without making changes directly to the
 django-trackback code.
+
+Django-trackback has no mechanism to prevent you from sending track-
+and pingbacks multiple times to the same destination. Preventing this is the
+responsibility of the developer integrating django-trackback into a project.
+(Hint: That's you!)
 
 
 
@@ -102,6 +157,9 @@ a generic view or some similar view function which gets an ``model`` or
 is not able to figure out which object should be pinged. A system for supplying
 callbacks will be implemented soon.
 
+There exists an experimental decorator ``trackback.decorators.receives_pingbacks_for``,
+which should help in specifying for which object a view (url) receives pingbacks.
+This feature may change drastically in the future.
 
 
 
