@@ -1,3 +1,1 @@
-Add support for pingback url to object mapping callback
-
 Fix handling of relative urls in different places.

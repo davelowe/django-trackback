@@ -1,0 +1,76 @@
+=====================================
+How pingbacks are attached to objects
+=====================================
+
+The model which stores pingbacks and trackbacks has a generic foreign-key, so
+it can be attached to any model in your project.
+
+If django-trackback receives a trackback it does so at a url which already
+contains the content-type-id and the object-id. Trackback urls are discovered
+using a RDF snippet as a comment in the HTML page. Using the 
+``{% get_trackback_rdf_for %}`` templatetag, django-trackback already puts
+content-type-id and object-id into the trackback url.
+
+If django-trackback receives a pingback it does so at a single pingback url, 
+for example at ``/ping/xmp-rpc/``, the only paramters it receives with the
+pingback are the source-url (the remote url) and the target-url (a url which
+belongs to its own site). A mapping between the target-url and an object in the
+database is not always trivial. Therefore django-trackback provides a system,
+where a list of resolver-functions is asked, if they can figure out which object
+is pinged.
+
+A resolver-function is a simple python function which just receives one argument:
+the target-url as a string. 
+The resolver-function then must either return an object, which is a django-model,
+or return None, if it does not know which object is pinged.
+
+Django-trackback provides the following default resolver-functions:
+
+  * ``decorated``
+    This resolver-functions works in conjunction which the ``receives_pingbacks_for``
+    decorator from ``trackback.decorators``. If a view is decorated with this
+    decorator, this resolver will figure out which object is pinged.
+    
+  * ``generic_view``
+    This resolver-function will look at the view-function name and its kwargs,
+    to determine, if it is a django generic-view. If it is, this resolver will
+    return the object, which is pinged.
+    
+    
+Providing your own resolver-function
+-------------------------------------
+
+The default resolver-functions can not handle every case. Therefore 
+django-trackback provides a way for you to register your own resolver-function.
+
+You can either override the default settings_ and specifiy your resolvers in
+the ``PINGBACK_RESOLVERS`` tuple, for example::
+
+    PINGBACK_RESOLVERS = (
+        'myproject.myapp.utils.my_resolver',
+        'trackback.utils.resolvers.decorated',
+        'trackback.utils.resolvers.generic_view',
+    )
+
+If you don't want to use the default resolvers, you can remove them from the
+tuple.
+
+The other way is to leave the default setting as it is and use the API to 
+register new resolver-functions on the fly. Here's a quick example:
+
+    from trackback import registry
+    from myproject.myapp.utils import my_resolver
+    
+    # add a function object
+    registry.add(my_resolver)
+    
+    # or add by string notation
+    registry.add('myproject.myapp.utils.my_resolver')
+    
+Calling ``add()`` with a single argument will append the resolver to the list
+of already registered resolvers. Specifying ``True`` as a second argument, 
+will insert the new resolver before all currently registered resolvers::
+
+    registry.add(my_resolver, True)
+    
+.. _settings: settings.html

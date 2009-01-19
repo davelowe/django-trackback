@@ -155,7 +155,7 @@ Pingbacks can currently only be received for models which are displayed via
 a generic view or some similar view function which gets an ``model`` or
 ``queryset`` and a ``object_id`` kwarg parameter. Otherwise django-trackback
 is not able to figure out which object should be pinged. A system for supplying
-callbacks will be implemented soon.
+callbacks is in place. Please see docs/pingbacks.txt for further details.
 
 There exists an experimental decorator ``trackback.decorators.receives_pingbacks_for``,
 which should help in specifying for which object a view (url) receives pingbacks.

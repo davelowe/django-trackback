@@ -1,5 +1,6 @@
 from trackback.models import Trackback
 from trackback.forms import TrackbackForm
+from trackback import registry
 from xmlrpclib import Fault
 from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 
@@ -65,37 +66,19 @@ class PingbackXMLRPCDispatcher(SimpleXMLRPCDispatcher):
         if request is None:
             raise Fault(faultCode=PINGBACK_UPSTREAM_ERROR, faultString='PINGBACK_UPSTREAM_ERROR')
         
-        urlresolver = get_resolver(None)
         obj = None
         
-        try:
-            site = Site.objects.get_current()
-            func, args, kwargs = urlresolver.resolve(target.replace("http://%s"%site.domain, ''))
-            
-            print dir(func)
-            
-            if hasattr(func, 'pingback_object'):
-                obj = func.pingback_object
+        for resolver in registry.resolvers:
+            try:
+                obj = resolver(target)
+                if obj is not None:
+                    break
+            except:
+                pass
                 
-            elif func.__name__ == 'object_detail':
-                # may be django's generic view or something which at least works in an similar fashion
-                if 'object_id' in kwargs:
-                    if 'queryset' in kwargs:
-                        try:
-                            obj = kwargs['queryset'].get(pk=kwargs['object_id'])
-                        except Exception, e:
-                            raise Fault(faultCode=PINGBACK_TARGET_DOES_NOT_EXIST, faultString='PINGBACK_TARGET_DOES_NOT_EXIST')
-                    elif 'model' in kwargs:
-                        try:
-                            obj = kwargs['model'].objects.get(pk=kwargs['object_id'])
-                        except Exception, e:
-                            raise Fault(faultCode=PINGBACK_TARGET_DOES_NOT_EXIST, faultString='PINGBACK_TARGET_DOES_NOT_EXIST')
-                 
-            #if not content_object is found raise an exception
-            if obj is None:
-                raise Fault(faultCode=PINGBACK_TARGET_CANNOT_BE_USED, faultString='PINGBACK_TARGET_CANNOT_BE_USED')
-        except (NoReverseMatch, Resolver404), e:
-            print "exception: %s" % e
+        #if not content_object is found raise an exception
+        if obj is None:
+            #raise Fault(faultCode=PINGBACK_TARGET_CANNOT_BE_USED, faultString='PINGBACK_TARGET_CANNOT_BE_USED')
             raise Fault(faultCode=PINGBACK_TARGET_DOES_NOT_EXIST, faultString='PINGBACK_TARGET_DOES_NOT_EXIST')
 
         ping = Trackback.objects.create(url=source, 

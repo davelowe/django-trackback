@@ -1,0 +1,21 @@
+==================
+Available settings
+==================
+
+Django-trackback uses the following settings variables:
+
+
+``PINGBACK_RESOLVERS``
+----------------------
+
+A tuple with strings which point to functions for resolving url-to-object 
+connections when receiving pingbacks. 
+
+The default is::
+
+    PINGBACK_RESOLVERS = (
+        'trackback.utils.resolvers.decorated',
+        'trackback.utils.resolvers.generic_view',
+    )
+    
+    
