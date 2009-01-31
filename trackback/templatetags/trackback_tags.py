@@ -47,28 +47,28 @@ get_trackback_rdf_for = register.tag(get_trackback_rdf_for)
      
 class TrackbacksNode(template.Node):
     """
-    Get a list of ``num`` Trackbacks for ``obj`` into the 
+    Get a list of Trackbacks for ``obj`` into the 
     current template context as ``varname``.
     
     """
-    def __init__(self, obj, num, varname):
-        self.num, self.varname = num, varname
+    def __init__(self, obj, varname):
+        self.varname = varname
         self.obj_name = obj
     
     
     def render(self, context):
         self.object = template.resolve_variable(self.obj_name, context)
-        context[self.varname] = Trackback.objects.filter(content_type=ContentType.objects.get_for_model(self.object), object_id=self.object.pk).all()[:self.num]
+        context[self.varname] = Trackback.objects.filter(content_type=ContentType.objects.get_for_model(self.object), object_id=self.object.pk).all()
         return ''
   
  
 def get_trackbacks_for(parser, token):
     bits = token.contents.split()
-    if len(bits) != 5:
-        raise template.TemplateSyntaxError, "get_trackbacks tag takes exactly four arguments"
-    if bits[3] != 'as':
-        raise template.TemplateSyntaxError, "third argument to get_trackbacks tag must be 'as'"
-    return TrackbacksNode(bits[1], bits[2], bits[4])
+    if len(bits) != 4:
+        raise template.TemplateSyntaxError, "get_trackbacks tag takes exactly three arguments"
+    if bits[2] != 'as':
+        raise template.TemplateSyntaxError, "second argument to get_trackbacks tag must be 'as'"
+    return TrackbacksNode(bits[1], bits[3])
  
     
 get_trackbacks_for = register.tag(get_trackbacks_for)
