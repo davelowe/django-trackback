@@ -46,6 +46,14 @@ def generic_view(target_url):
                         return obj
                     except Exception, e:
                         pass
+                        
+            elif 'slug' in kwargs and 'slug_field' in kwargs:
+                try:
+                    obj = kwargs['queryset'].get(**{kwargs['slug_field']: kwargs['slug'],})
+                    return obj
+                except Exception, e:
+                    pass
+                    
         return None    
     except (NoReverseMatch, Resolver404), e:
         return None
