@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
@@ -25,9 +26,14 @@ class Trackback(models.Model):
     remote_ip = models.IPAddressField()
     site = models.ForeignKey(Site)
     is_public = models.BooleanField(default=False)
-    submit_date = models.DateTimeField(auto_now_add=True)
+    submit_date = models.DateTimeField(default=None)
     
     
     def __unicode__(self):
         return u"Trackback from %s" % self.url
 
+    def save(self, *args, **kwargs):
+        if self.submit_date is None:
+            self.submit_date = datetime.datetime.now()
+        super(Trackback, self).save(*args, **kwargs)
+        
