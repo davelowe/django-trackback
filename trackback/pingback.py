@@ -97,7 +97,7 @@ class PingbackXMLRPCDispatcher(SimpleXMLRPCDispatcher):
 try:
     xmlrpc_dispatcher = PingbackXMLRPCDispatcher(allow_none=False, encoding=None)
 except:
-    xmlrpc_dispatchter = PingbackXMLRPCDispatcher() #python 2.4
+    xmlrpc_dispatcher = PingbackXMLRPCDispatcher() #python 2.4
 
 
     
