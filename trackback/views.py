@@ -30,7 +30,7 @@ def receive_trackback(request, content_type_id, object_id, form_class, template_
         return render_to_response(template_name, {'error': False}, mimetype="text/xml")
     else:
         context = {'error': True,
-                   'messages': "\n".join(form.errors)
+                   'message': "\n".join(form.errors)
                   }
         return render_to_response(template_name, context, mimetype="text/xml")
     
